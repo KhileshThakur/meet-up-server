@@ -151,6 +151,44 @@ app.post('/join-meet', (req, res) => {
   }
 });
 
+// API to directly join a meeting via URL (GET)
+app.get('/join/:roomName', (req, res) => {
+  try {
+    const { roomName } = req.params;
+    const userIdentity = 'guest'; // Or get this dynamically, depending on your use case
+
+    if (!roomName) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing roomName parameter',
+        message: 'roomName is required to join the meeting',
+      });
+    }
+
+    // Generate the token for the room and user
+    const token = generateToken(roomName, userIdentity);
+
+    const response = {
+      success: true,
+      token,
+      roomName,
+      userIdentity,
+      serverUrl: LIVEKIT_SERVER_URL,
+    };
+
+    console.log('Join meeting response:', { ...response, token: '***' });
+    res.json(response);
+  } catch (error) {
+    console.error('Join meeting error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate token',
+      message: error.message,
+    });
+  }
+});
+
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Backend is running at ${PORT}`);
