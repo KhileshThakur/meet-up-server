@@ -60,35 +60,24 @@ const app = express();
 app.use(express.json());
 
 // Enable CORS
-// app.use((req, res, next) => {
-//   res.header('Access-Control-Allow-Origin', '*');
-//   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-//   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   
-//   // Log incoming requests
-//   console.log('Incoming request:', {
-//     method: req.method,
-//     path: req.path,
-//     body: req.body,
-//     headers: req.headers
-//   });
+  // Log incoming requests
+  console.log('Incoming request:', {
+    method: req.method,
+    path: req.path,
+    body: req.body,
+    headers: req.headers
+  });
   
-//   if (req.method === 'OPTIONS') {
-//     return res.sendStatus(200);
-//   }
-//   next();
-// });
-const cors = require('cors');
-
-// Set up CORS options
-const corsOptions = {
-  origin: '*',  // Allow all origins
-  methods: ['GET', 'POST', 'OPTIONS'],  // Allow GET, POST, and OPTIONS methods
-  allowedHeaders: ['Content-Type'],  // Allow Content-Type header
-};
-
-// Enable CORS with the above options
-app.use(cors(corsOptions));
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -104,7 +93,7 @@ app.post('/create-meet', async (req, res) => {
     const roomName = req.body.roomName || `room-${Date.now()}`;
     const room = await createRoom(roomName);
 
-    const joinUrl = `${FRONTEND_BASE_URL}/join/${room.name}`;
+    const joinUrl = `${FRONTEND_BASE_URL}`;
 
     const response = { 
       success: true,
@@ -158,43 +147,6 @@ app.post('/join-meet', (req, res) => {
       success: false, 
       error: 'Failed to generate token',
       message: error.message 
-    });
-  }
-});
-
-// API to directly join a meeting via URL (GET)
-app.get('/join/:roomName', (req, res) => {
-  try {
-    const { roomName } = req.params;
-    const userIdentity = 'guest'; // Or get this dynamically, depending on your use case
-
-    if (!roomName) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing roomName parameter',
-        message: 'roomName is required to join the meeting',
-      });
-    }
-
-    // Generate the token for the room and user
-    const token = generateToken(roomName, userIdentity);
-
-    const response = {
-      success: true,
-      token,
-      roomName,
-      userIdentity,
-      serverUrl: LIVEKIT_SERVER_URL,
-    };
-
-    console.log('Join meeting response:', { ...response, token: '***' });
-    res.json(response);
-  } catch (error) {
-    console.error('Join meeting error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to generate token',
-      message: error.message,
     });
   }
 });
